@@ -38,7 +38,7 @@ export default function Home() {
         </svg>
         <motion.div className="hero-text" initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }}>
           <p className="mono eyebrow">{ROUTES.length} מסלולים · {STATIONS} תחנות · 5 תקופות</p>
-          <h1>לעמוד במקום,<br />לקרוא את הפסוק,<br />לראות את הנוף.</h1>
+          <h1>לעמוד במקום, לקרוא את הפסוק,<br />לראות את הנוף.</h1>
           <p className="hero-sub">מסלולי טיול בעקבות סיפורי התנ״ך. בכל תחנה: מה קרה כאן, מה רואים מכאן, ומה עושים בשטח.</p>
           <div className="hero-actions">
             <a href="#map" className="btn">למפת המסלולים</a>

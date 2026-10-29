@@ -1,20 +1,59 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { MapContainer, TileLayer, Polyline, Marker, Tooltip, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { colorOf, STATION_TYPES } from '../data/routes.js';
 
+// שכבות בלי מפתח API. לכל שכבה מקור גיבוי שנכנס אוטומטית אם האריחים נכשלים.
+// (CARTO הפסיק לעבוד בלי מפתח ב-2026-10 והחזיר "API KEY REQUIRED" במקום מפה.)
+const ESRI = 'https://server.arcgisonline.com/ArcGIS/rest/services';
 export const TILES = {
   grey: {
-    name: 'מפה אפורה',
-    url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
-    attribution: '&copy; OpenStreetMap &copy; CARTO',
+    name: 'מפה',
+    url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+    fallback: `${ESRI}/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}`,
+    attribution: '&copy; OpenStreetMap',
+    className: 'tiles-grey',
+    maxZoom: 19,
   },
   relief: {
     name: 'תבליט',
     url: 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
-    attribution: '&copy; OpenStreetMap &copy; OpenTopoMap',
+    fallback: `${ESRI}/World_Topo_Map/MapServer/tile/{z}/{y}/{x}`,
+    attribution: '&copy; OpenStreetMap &copy; OpenTopoMap &copy; Esri',
+    maxZoom: 17,
+  },
+  sat: {
+    name: 'לוויין',
+    url: `${ESRI}/World_Imagery/MapServer/tile/{z}/{y}/{x}`,
+    fallback: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+    attribution: '&copy; Esri, Maxar, Earthstar Geographics',
+    maxZoom: 18,
   },
 };
+
+/** שכבת אריחים שעוברת למקור הגיבוי אחרי כמה כשלונות לפני שנטען אריח אחד. */
+function Tiles({ mode }) {
+  const t = TILES[mode];
+  const [useFallback, setUseFallback] = useState(false);
+  const stats = useRef({ ok: 0, fail: 0 });
+  useEffect(() => { setUseFallback(false); stats.current = { ok: 0, fail: 0 }; }, [mode]);
+  return (
+    <TileLayer
+      key={`${mode}-${useFallback}`}
+      url={useFallback ? t.fallback : t.url}
+      attribution={t.attribution}
+      className={t.className}
+      maxZoom={t.maxZoom}
+      eventHandlers={{
+        tileload: () => { stats.current.ok += 1; },
+        tileerror: () => {
+          stats.current.fail += 1;
+          if (!useFallback && stats.current.ok === 0 && stats.current.fail >= 3) setUseFallback(true);
+        },
+      }}
+    />
+  );
+}
 
 const icon = (n, type, color, state) =>
   L.divIcon({
@@ -52,7 +91,6 @@ export default function MapView({ routes, focusId, progress, activeStation, tile
   const focus = routes.find((r) => r.id === focusId);
   const bounds = focus ? focus.stations.map((s) => s.at) : all;
   const active = focus?.stations.find((s) => s.id === activeStation);
-  const t = TILES[tiles];
 
   return (
     <MapContainer
@@ -63,7 +101,7 @@ export default function MapView({ routes, focusId, progress, activeStation, tile
       zoomControl={interactive}
       attributionControl
     >
-      <TileLayer key={tiles} url={t.url} attribution={t.attribution} />
+      <Tiles mode={tiles} />
       <Controller bounds={bounds} center={active ? active.at : null} />
       {routes.map((r) => {
         const color = colorOf(r);
