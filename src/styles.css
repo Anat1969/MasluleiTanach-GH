@@ -78,7 +78,8 @@ mark { background: linear-gradient(transparent 30%, var(--mark) 30%, var(--mark)
 ai-menu { flex: 0 0 auto; }
 
 /* דף הבית */
-.hero { position: relative; padding: clamp(48px, 9vw, 120px) clamp(16px, 5vw, 64px) clamp(40px, 6vw, 80px); overflow: hidden; }
+.hero { position: relative; padding: clamp(28px, 4vw, 56px) clamp(16px, 5vw, 64px) clamp(20px, 3vw, 36px); overflow: hidden; }
+.hero h1 { font-size: clamp(2rem, 4.4vw, 3.6rem); }
 .hero-lines { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; }
 .hero-lines path { fill: none; stroke: #c9c6bf; stroke-width: 1; }
 .hero-lines path:nth-child(4) { stroke: var(--gold); stroke-width: 2; stroke-dasharray: 2 8; }
@@ -367,3 +368,5 @@ ai-menu { flex: 0 0 auto; }
 .legend:not([open]) .legend-title { margin: 0; }
 .legend-title::after { content: ' · הסתרה'; color: var(--ink-3); }
 .legend:not([open]) .legend-title::after { content: ' · הצגה'; }
+/* מפת OSM בגווני אפור, כדי שצבעי המסלולים יובילו */
+.tiles-grey { filter: grayscale(1) contrast(0.92) brightness(1.06); }

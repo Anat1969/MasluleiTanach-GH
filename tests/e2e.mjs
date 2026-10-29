@@ -23,7 +23,7 @@ async function mockAll(ctx) {
     const t = decodeURIComponent(new URL(r.request().url()).searchParams.get('titles') || '');
     r.fulfill({ contentType: 'application/json', body: JSON.stringify({ query: { pages: { 1: { title: t, thumbnail: { source: 'https://img.test/a.png' } } } } }) });
   });
-  await ctx.route(/img\.test|cartocdn|opentopomap/, (r) => r.fulfill({ contentType: 'image/png', body: png }));
+  await ctx.route(/img\.test|openstreetmap|arcgisonline|opentopomap/, (r) => r.fulfill({ contentType: 'image/png', body: png }));
   await ctx.route(/appofapp-gh\.vercel\.app\/ai-menu\.js/, (r) => r.fulfill({ contentType: 'text/javascript', body: menu }));
   await ctx.route(/fonts\.(googleapis|gstatic)/, (r) => r.abort());
 }
@@ -68,6 +68,10 @@ await page.waitForTimeout(200);
 ok((await page.locator('.focus h2').textContent()) === 'סדום ועמורה', 'timeline scrub to the start focuses Sodom');
 await page.locator('.seg button', { hasText: 'תבליט' }).first().click();
 ok(await page.locator('.atlas img.leaflet-tile[src*="opentopomap"]').first().count() > 0, 'relief tiles switch');
+await page.locator('.seg button', { hasText: 'לוויין' }).first().click();
+ok(await page.locator('.atlas img.leaflet-tile[src*="World_Imagery"]').first().count() > 0, 'satellite tiles switch');
+await page.locator('.seg button', { hasText: 'מפה' }).first().click();
+ok(await page.locator('.atlas img.leaflet-tile[src*="openstreetmap"]').first().count() > 0, 'grey OSM tiles are the default map');
 await page.locator('.focus .btn').click();
 await page.waitForURL(/\/route\/sodom/);
 ok(true, 'open route from focus panel');
@@ -138,6 +142,7 @@ ok(inst.installabilityErrors.length === 0, `installable (${JSON.stringify(inst.i
 // נייד
 const m = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
 await mockAll(m);
+await m.route(/opentopomap/, (r) => r.abort());
 const mp = await m.newPage();
 watch(mp);
 for (const path of ['/', '/timeline', '/threads', ...ROUTES.map((r) => `/route/${r.id}`)]) {
@@ -156,7 +161,11 @@ await mp.evaluate(() => window.scrollTo(0, 1400));
 await mp.waitForTimeout(1200);
 await mp.screenshot({ path: `${SHOTS}/route-mobile.png` });
 
-ok(errors.length === 0, `no console errors${errors.length ? ': ' + errors.slice(0, 5).join(' | ') : ''}`);
+await mp.goto(`${ROOT}/route/saul`);
+await mp.waitForTimeout(2500);
+ok(await mp.locator('img.leaflet-tile[src*="World_Topo_Map"]').count() > 0, 'relief falls back to Esri when OpenTopoMap fails');
+const realErrors = errors.filter((e) => !/opentopomap|ERR_FAILED|net::/.test(e));
+ok(realErrors.length === 0, `no console errors${realErrors.length ? ': ' + realErrors.slice(0, 5).join(' | ') : ''}`);
 await browser.close();
 server.kill();
 console.log(fails ? `\n${fails} FAILED` : '\nALL GREEN');
