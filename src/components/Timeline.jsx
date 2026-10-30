@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
-import { PERIODS, ROUTES, colorOf } from '../data/routes.js';
+import { ROUTES, colorOf } from '../data/routes.js';
+import { ERAS } from '../data/eras.js';
 import { yearLabel } from '../lib/bible.js';
 
 // הזמן זורם מימין לשמאל, כמו הקריאה. ציר לא לינארי: התקופה הצפופה (שופטים ומלוכה) מקבלת יותר רוחב.
-const STOPS = [[-1900, 0], [-1600, 10], [-1250, 17], [-1150, 28], [-1000, 76], [-930, 83], [-800, 100]];
+const STOPS = [[-2000, 0], [-1550, 13], [-1200, 27], [-1000, 64], [-930, 77], [-720, 100]];
 export function pos(y) {
   for (let i = 1; i < STOPS.length; i++) {
     const [y0, p0] = STOPS[i - 1];
@@ -19,13 +20,13 @@ function yearAt(p) {
     const [y1, p1] = STOPS[i];
     if (p <= p1) return Math.round(y0 + ((p - p0) / (p1 - p0)) * (y1 - y0));
   }
-  return -800;
+  return -720;
 }
 const nearest = (p) => ROUTES.reduce((a, r) => (Math.abs(pos(r.year) - p) < Math.abs(pos(a.year) - p) ? r : a));
 const sorted = [...ROUTES].sort((a, b) => a.year - b.year);
 
 /** ציר הזמן עם פס שעובר בין השנים. מחובר למפה דרך onFocus. */
-export default function Timeline({ focusId, onFocus, onOpen }) {
+export default function Timeline({ focusId, onFocus, onOpen, eraId, onEra }) {
   const focus = ROUTES.find((r) => r.id === focusId);
   const [p, setP] = useState(focus ? pos(focus.year) : 50);
   const [playing, setPlaying] = useState(false);
@@ -68,10 +69,17 @@ export default function Timeline({ focusId, onFocus, onOpen }) {
         <span className="tl-hint">גררו את הפס, המפה תעבור למסלול של אותה תקופה</span>
       </div>
       <div className="tl-track">
-        {PERIODS.map((pr) => (
-          <div key={pr.id} className="tl-band" style={{ right: `${pos(pr.from)}%`, width: `${pos(pr.to) - pos(pr.from)}%`, '--c': pr.color }}>
-            <span>{pr.name}</span>
-          </div>
+        {ERAS.map((e) => (
+          <button
+            key={e.id}
+            className={`tl-band press-flat ${eraId === e.id ? 'on' : ''}`}
+            style={{ right: `${pos(e.from)}%`, width: `${pos(e.to) - pos(e.from)}%`, '--c': e.color }}
+            onClick={() => onEra?.(e.id)}
+            title={`${e.name}, ${-e.from} עד ${-e.to} לפנה״ס. לחיצה פותחת את מהדורת החדשות של התקופה`}
+          >
+            <span className="tl-band-name">{e.name}</span>
+            <span className="tl-band-years mono">{-e.from} עד {-e.to}</span>
+          </button>
         ))}
         {sorted.map((r, i) => (
           <button
@@ -97,12 +105,12 @@ export default function Timeline({ focusId, onFocus, onOpen }) {
           aria-label="שנה על ציר הזמן"
         />
         <div className="tl-ticks">
-          {[-1800, -1200, -1100, -1050, -1000, -900, -800].map((y) => (
+          {[-2000, -1550, -1200, -1100, -1000, -930, -720].map((y) => (
             <span key={y} style={{ right: `${pos(y)}%` }} className="mono">{-y}</span>
           ))}
         </div>
       </div>
-      <p className="tl-note">השנים לפני הספירה, הערכה מקובלת. תקופת האבות מסורתית ושנויה במחלוקת. הציר אינו לינארי.</p>
+      <p className="tl-note">השנים לפני הספירה, לפי הכרונולוגיה המקובלת. הציר מתרחב בתקופות הצפופות. לחיצה על תקופה פותחת את מהדורת החדשות שלה.</p>
     </div>
   );
 }

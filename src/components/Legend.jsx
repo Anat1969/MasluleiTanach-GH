@@ -24,7 +24,7 @@ export default function Legend({ tiles, setTiles, showPeriods = true, color, pro
           <li key={k}><span className={`pin pin-${k} pin-legend`} style={{ '--c': color || '#3c4043' }} />{name}</li>
         ))}
       </ul>
-      {showPeriods && <p className="legend-note">קו מלא: הליכה. קו מנוקד: נסיעה בין אתרים. הקווים מחברים תחנות ואינם שביל מסומן.</p>}
+      {showPeriods && <p className="legend-note">קו מלא: הליכה בשבילים. קו מנוקד: נסיעה בדרכים. התוואי מחושב על רשת OpenStreetMap.</p>}
       <div className="seg" role="group" aria-label="סוג מפה">
         {Object.entries(TILES).map(([k, t]) => (
           <button key={k} className={tiles === k ? 'on' : ''} onClick={() => setTiles(k)} aria-pressed={tiles === k}>{t.name}</button>

@@ -8,6 +8,10 @@ const ROOT = 'http://localhost:4173';
 const SHOTS = process.env.SHOTS || 'test-results';
 mkdirSync(SHOTS, { recursive: true });
 const { ROUTES, THREADS } = await import('../src/data/routes.js');
+const { ERAS } = await import('../src/data/eras.js');
+const { ART } = await import('../src/data/art.js');
+const { STORIES } = await import('../src/data/stories.js');
+const TRAILS = JSON.parse(readFileSync('src/data/trails.json', 'utf8'));
 const png = readFileSync('public/icon-512.png');
 const menu = readFileSync('tests/ai-menu.fixture.js');
 
@@ -89,8 +93,31 @@ for (const r of ROUTES) {
   const refs = await page.locator('.station .ref').evaluateAll((as) => as.map((a) => a.href));
   ok(refs.length > 0 && refs.every((h) => /sefaria\.org\.il\/[A-Za-z_]+\.\d+\.\d+/.test(h)), `${r.id}: verse links to Sefaria`);
   ok((await page.locator('.layers').count()) === r.stations.length, `${r.id}: three layers per station`);
+  const pts = await page.locator('.r-map path.trail').evaluateAll((ps) => ps.map((p) => (p.getAttribute('d').match(/L/g) || []).length));
+  ok(pts.length === r.stations.length - 1 && pts.every((n) => n >= 2), `${r.id}: trail follows real paths (${pts.join(',')} vertices)`);
+  ok(await page.locator('.profile-desk .profile svg').count() === 1, `${r.id}: elevation profile`);
+  ok((await page.locator('.story-head h2').textContent()) === STORIES[r.id].title, `${r.id}: background story`);
+  ok(await page.locator('.era-box h3').count() === 1, `${r.id}: era context box`);
+  ok((await page.locator('.work').count()) === ART[r.id].length, `${r.id}: ${ART[r.id].length} works of art`);
   if (r.id === 'elah') await page.screenshot({ path: `${SHOTS}/route-desktop.png` });
 }
+
+// אמנות: סינון לפי סוג
+await page.goto(`${ROOT}/route/samson`);
+await page.locator('.filters .chip', { hasText: 'ציור' }).click();
+ok((await page.locator('.work').count()) === ART.samson.filter((w) => w.kind === 'paint').length, 'art filter by kind');
+// פרופיל: ריחוף מסמן נקודה על המפה
+const svg = page.locator('.profile-desk svg');
+await svg.scrollIntoViewIfNeeded();
+const bb = await svg.boundingBox();
+await page.mouse.move(bb.x + bb.width * 0.5, bb.y + bb.height * 0.6);
+await page.waitForTimeout(200);
+ok(await page.locator('.pf-tip').count() === 1, 'profile hover shows elevation');
+ok(await page.locator('.r-map path.leaflet-interactive[fill="#e8c26a"]').count() === 1, 'profile hover marks the point on the map');
+// מעבר בין תחנות מפעיל את ההולך על השביל
+await page.locator('.step').nth(1).click();
+await page.waitForTimeout(400);
+ok(await page.locator('.r-map .walker').count() === 1, 'walker moves along the trail');
 
 // "הייתי כאן" נשמר
 await page.goto(`${ROOT}/route/elah`);
@@ -113,8 +140,18 @@ for (const [t, th] of Object.entries(THREADS)) {
   await page.locator('.th-thread', { hasText: th.name }).click();
 }
 await page.screenshot({ path: `${SHOTS}/threads-desktop.png` });
-// ציר זמן
+// ציר זמן: מהדורת חדשות לכל תקופה
 await page.goto(`${ROOT}/timeline`);
+for (const e of ERAS) {
+  await page.locator('.era-tab', { hasText: e.name }).click();
+  await page.waitForTimeout(250);
+  ok((await page.locator('.news-headline').textContent()) === e.headline, `era ${e.id}: news headline`);
+  ok((await page.locator('.era-map .people, .era-map .people-dot').count()) === e.peoples.length, `era ${e.id}: ${e.peoples.length} peoples on the map`);
+  ok(new URL(page.url()).searchParams.get('era') === e.id, `era ${e.id}: state in URL`);
+}
+await page.locator('.tl-band').first().click();
+ok(new URL(page.url()).searchParams.get('era') === ERAS[0].id, 'timeline band opens its era');
+await page.screenshot({ path: `${SHOTS}/timeline-desktop.png` });
 ok((await page.locator('.story-row').count()) === ROUTES.length, 'timeline page lists every story');
 await page.locator('.tl-dot').first().click();
 await page.locator('.tl-dot').first().click();
