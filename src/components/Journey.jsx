@@ -104,7 +104,7 @@ export default function Journey({ id }) {
         <div className="journey-map">
           <MapContainer key={id} className="map" bounds={bounds} boundsOptions={{ padding: [40, 40] }} {...ZOOM_PROPS} attributionControl>
             <WheelGuard />
-            <Tiles mode="relief" />
+            <Tiles mode="grey" />
             {jd && jd.legs.map((l, i) => (
               <Polyline key={i} positions={l.coords} pathOptions={{ color: i < cur ? color : '#1f2328', weight: i < cur ? 6 : 4, opacity: i < cur ? 1 : 0.7, dashArray: i < cur ? null : '8 6', lineCap: 'round', lineJoin: 'round' }} />
             ))}
