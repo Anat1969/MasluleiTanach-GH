@@ -5,6 +5,7 @@ import Home from './pages/Home.jsx';
 import RoutePage from './pages/RoutePage.jsx';
 import TimelinePage from './pages/TimelinePage.jsx';
 import ThreadsPage from './pages/ThreadsPage.jsx';
+import PeoplePage from './pages/PeoplePage.jsx';
 
 export default function App() {
   const loc = useLocation();
@@ -18,6 +19,7 @@ export default function App() {
             <Route path="/route/:id" element={<RoutePage />} />
             <Route path="/timeline" element={<TimelinePage />} />
             <Route path="/threads" element={<ThreadsPage />} />
+            <Route path="/people" element={<PeoplePage />} />
             <Route path="*" element={<Home />} />
           </Routes>
         </motion.div>

@@ -12,6 +12,7 @@ export default function TopBar() {
       <nav className="nav">
         <NavLink to="/" end>מסלולים</NavLink>
         <NavLink to="/timeline">ציר זמן</NavLink>
+        <NavLink to="/people">דמויות</NavLink>
         <NavLink to="/threads">מארג קשרים</NavLink>
       </nav>
       <AIMenu />

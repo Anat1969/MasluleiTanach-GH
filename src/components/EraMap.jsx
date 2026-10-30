@@ -2,6 +2,7 @@ import { MapContainer, Marker } from 'react-leaflet';
 import L from 'leaflet';
 import { ROLES } from '../data/eras.js';
 import { Tiles } from './MapView.jsx';
+import { ZOOM_PROPS, WheelGuard } from './mapZoom.jsx';
 
 const BOUNDS = [[30.75, 34.1], [33.45, 36.5]];
 // עיר צפופה מוצגת כנקודה בלבד, ושמה בתיאור שמופיע בריחוף.
@@ -19,7 +20,8 @@ const label = (p) =>
 export default function EraMap({ era }) {
   return (
     <div className="era-map">
-      <MapContainer className="map" bounds={BOUNDS} scrollWheelZoom={false} attributionControl zoomSnap={0.25}>
+      <MapContainer className="map" bounds={BOUNDS} {...ZOOM_PROPS} attributionControl>
+        <WheelGuard />
         <Tiles mode="grey" />
         {era.peoples.map((p) => <Marker key={`${era.id}-${p.name}`} position={p.at} icon={label(p)} interactive={false} title={p.name} />)}
       </MapContainer>
