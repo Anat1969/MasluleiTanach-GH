@@ -12,6 +12,10 @@ const { ERAS } = await import('../src/data/eras.js');
 const { ART } = await import('../src/data/art.js');
 const { STORIES } = await import('../src/data/stories.js');
 const { PEOPLE, LINKS, RELATIONS } = await import('../src/data/people.js');
+const { THREAD_STORY } = await import('../src/data/threads.js');
+const { TERRITORIES } = await import('../src/data/territories.js');
+const { TELLS } = await import('../src/data/tells.js');
+const { JOURNEYS } = await import('../src/data/journeys.js');
 const TRAILS = JSON.parse(readFileSync('src/data/trails.json', 'utf8'));
 const png = readFileSync('public/icon-512.png');
 const menu = readFileSync('tests/ai-menu.fixture.js');
@@ -65,12 +69,12 @@ for (const r of ROUTES) {
   await page.locator('.focus .btn-quiet').click();
 }
 // ציר הזמן מזיז את המיקוד
+// מחכים לכותרת המצופה (עד שתי שניות): אחרי רצף לחיצות המפה עדיין באנימציה, והעדכון מגיע מאוחר מ־200 מ"ש
+const focusIs = (t) => page.waitForFunction((x) => document.querySelector('.focus h2')?.textContent === x, t, { timeout: 2000 }).then(() => true, () => false);
 await page.locator('.atlas .tl-range').fill('90');
-await page.waitForTimeout(200);
-ok((await page.locator('.focus h2').textContent()) === 'אליהו, אחאב וכרם נבות', 'timeline scrub focuses the matching route');
+ok(await focusIs('אליהו, אחאב וכרם נבות'), 'timeline scrub focuses the matching route');
 await page.locator('.atlas .tl-range').fill('3');
-await page.waitForTimeout(200);
-ok((await page.locator('.focus h2').textContent()) === 'סדום ועמורה', 'timeline scrub to the start focuses Sodom');
+ok(await focusIs('סדום ועמורה'), 'timeline scrub to the start focuses Sodom');
 await page.locator('.seg button', { hasText: 'תבליט' }).first().click();
 ok(await page.locator('.atlas img.leaflet-tile[src*="opentopomap"]').first().count() > 0, 'relief tiles switch');
 await page.locator('.seg button', { hasText: 'לוויין' }).first().click();
@@ -94,8 +98,10 @@ for (const r of ROUTES) {
   const refs = await page.locator('.station .ref').evaluateAll((as) => as.map((a) => a.href));
   ok(refs.length > 0 && refs.every((h) => /sefaria\.org\.il\/[A-Za-z_]+\.\d+\.\d+/.test(h)), `${r.id}: verse links to Sefaria`);
   ok((await page.locator('.layers').count()) === r.stations.length, `${r.id}: three layers per station`);
-  const pts = await page.locator('.r-map path.trail').evaluateAll((ps) => ps.map((p) => (p.getAttribute('d').match(/L/g) || []).length));
-  ok(pts.length === r.stations.length - 1 && pts.every((n) => n >= 2), `${r.id}: trail follows real paths (${pts.join(',')} vertices)`);
+  // Leaflet חותך קטעים שמחוץ למסך, ולכן בודקים את הנתונים ואת מספר הקווים שצוירו
+  const segs = await page.locator('.r-map path.trail').count();
+  const verts = TRAILS[r.id].legs.map((l) => l.coords.length);
+  ok(segs === r.stations.length - 1 && verts.every((n) => n >= 3), `${r.id}: trail follows real paths (${verts.join(',')} points per leg)`);
   ok(await page.locator('.profile-desk .profile svg').count() === 1, `${r.id}: elevation profile`);
   ok((await page.locator('.story-head h2').textContent()) === STORIES[r.id].title, `${r.id}: background story`);
   ok(await page.locator('.era-box h3').count() === 1, `${r.id}: era context box`);
@@ -163,14 +169,22 @@ await page.goto(`${ROOT}/route/saul?s=gilboa`);
 await page.waitForTimeout(1500);
 ok(await page.locator('.step.on', { hasText: 'הר הגלבוע' }).count() === 1, 'deep link opens the station');
 
-// מארג
+// מארג: כלל, תובנה, יישום ומפה לכל חוט
 await page.goto(`${ROOT}/threads`);
 for (const [t, th] of Object.entries(THREADS)) {
-  await page.locator('.th-thread', { hasText: th.name }).click();
-  const n = ROUTES.filter((r) => r.threads.includes(t)).length;
-  ok((await page.locator('.th-detail li').count()) === n, `thread ${t}: ${n} routes`);
-  await page.locator('.th-thread', { hasText: th.name }).click();
+  await page.locator('.thread-tile').filter({ has: page.getByText(th.name, { exact: true }) }).click();
+  await page.waitForTimeout(450);
+  ok((await page.locator('.thread-detail h2').textContent()) === th.name, `thread ${t}: detail`);
+  ok((await page.locator('.thread-why .tone').count()) === 3, `thread ${t}: rule, insight and action`);
+  const n = THREAD_STORY[t].stops.length;
+  ok((await page.locator('.thread-stops li').count()) === n && (await page.locator('.thread-map .leaflet-marker-icon').count()) === n, `thread ${t}: ${n} stops on list and map`);
+  ok(new URL(page.url()).searchParams.get('t') === t, `thread ${t}: state in URL`);
 }
+await page.locator('.thread-stops .stop-link').first().click();
+await page.waitForURL(/\/route\/.*s=/);
+ok(true, 'thread stop opens the station');
+await page.goto(`${ROOT}/threads?t=yizrael`);
+await page.waitForTimeout(500);
 await page.screenshot({ path: `${SHOTS}/threads-desktop.png` });
 // דף הדמויות
 await page.goto(`${ROOT}/people`);
@@ -188,16 +202,59 @@ await page.locator('.route-filter .chip', { hasText: 'מלחמת דבורה' }).
 ok((await page.locator('.web-node').count()) === PEOPLE.filter((p) => p.routes.includes('deborah')).length, 'route filter on people page');
 await page.screenshot({ path: `${SHOTS}/people-desktop.png` });
 
+// מסע של דמות
+for (const id of Object.keys(JOURNEYS)) {
+  await page.goto(`${ROOT}/people?j=${id}`);
+  await page.waitForTimeout(1200);
+  const n = JOURNEYS[id].stops.length;
+  ok((await page.locator('.journey-stops li').count()) === n, `journey ${id}: ${n} stops`);
+  ok((await page.locator('.journey-map path.leaflet-interactive').count()) >= n - 1, `journey ${id}: real path legs`);
+  await page.locator('.journey-stops button').nth(n - 1).click();
+  await page.waitForTimeout(300);
+  ok((await page.locator('.journey-card h4').textContent()) === JOURNEYS[id].stops[n - 1].name, `journey ${id}: stop card`);
+}
+await page.locator('.journey-play').click();
+await page.waitForTimeout(1500);
+ok(await page.locator('.journey-map .walker').count() === 1, 'journey walker plays');
+await page.goto(`${ROOT}/people?p=david`);
+await page.locator('.person .chip-strong').click();
+await page.waitForTimeout(800);
+ok(new URL(page.url()).searchParams.get('j') === 'david', 'character card opens the journey');
+
+// תלים: שכבות, פריסה, חפירה
+for (const [id, t] of Object.entries(TELLS)) {
+  await page.goto(`${ROOT}/tells?t=${id}`);
+  await page.waitForTimeout(500);
+  ok((await page.locator('.tell-list li').count()) === t.layers.length && (await page.locator('.tell-layer').count()) === t.layers.length, `tell ${id}: ${t.layers.length} layers`);
+  await page.locator('.tell-list button').last().click();
+  ok((await page.locator('.tell-card h4').textContent()) === t.layers[0].title, `tell ${id}: bottom layer card`);
+}
+await page.locator('.tell-controls .chip', { hasText: 'פריסת' }).click();
+ok(await page.locator('.tell-controls .chip.on').count() === 1, 'tell exploded view');
+await page.locator('.dig input').fill('2');
+await page.waitForTimeout(500);
+ok(await page.locator('.tell-list li.gone').count() === TELLS.afek.layers.length - 2, 'dig slider peels layers from the top');
+await page.screenshot({ path: `${SHOTS}/tell-desktop.png` });
+await page.goto(`${ROOT}/route/deborah?s=megiddo`);
+await page.waitForTimeout(1500);
+ok(await page.locator('#s-megiddo .tell').count() === 1, 'tell section inside the Megiddo station');
+
 // ציר זמן: מהדורת חדשות לכל תקופה
 await page.goto(`${ROOT}/timeline`);
 for (const e of ERAS) {
   await page.locator('.era-tab', { hasText: e.name }).click();
   await page.waitForTimeout(250);
   ok((await page.locator('.news-headline').textContent()) === e.headline, `era ${e.id}: news headline`);
-  ok((await page.locator('.era-map .people, .era-map .people-dot').count()) === e.peoples.length, `era ${e.id}: ${e.peoples.length} peoples on the map`);
+  const areas = TERRITORIES[e.id] || [];
+  const placed = e.peoples.filter((p) => !areas.some((a) => a.name === p.name.split(' (')[0] || a.name === p.name)).length;
+  ok((await page.locator('.era-map .people, .era-map .people-dot').count()) === placed, `era ${e.id}: ${placed} places on the map (areas carry the rest)`);
   ok(new URL(page.url()).searchParams.get('era') === e.id, `era ${e.id}: state in URL`);
+  ok((await page.locator('.era-map path.territory').count()) === (TERRITORIES[e.id] || []).length, `era ${e.id}: ${(TERRITORIES[e.id] || []).length} territories with borders`);
   ok((await page.locator('.news-routes .chip').count()) >= PEOPLE.filter((p) => p.era === e.id).length, `era ${e.id}: people of the era`);
 }
+await page.locator('.era-map .seg button', { hasText: 'גבולות' }).click();
+ok((await page.locator('.era-map path.territory').count()) === 0, 'borders layer toggles off');
+await page.locator('.era-map .seg button', { hasText: 'גבולות' }).click();
 await page.locator('.tl-band').first().click();
 ok(new URL(page.url()).searchParams.get('era') === ERAS[0].id, 'timeline band opens its era');
 await page.screenshot({ path: `${SHOTS}/timeline-desktop.png` });
@@ -208,7 +265,7 @@ await page.waitForURL(/\/route\//);
 ok(true, 'second click on a timeline dot opens the route');
 // ניווט עליון
 await page.goto(ROOT);
-for (const [label, path] of [['ציר זמן', '/timeline'], ['דמויות', '/people'], ['מארג קשרים', '/threads'], ['מסלולים', '/']]) {
+for (const [label, path] of [['ציר זמן', '/timeline'], ['דמויות', '/people'], ['מארג קשרים', '/threads'], ['תלים', '/tells'], ['מסלולים', '/']]) {
   await page.locator('.nav a', { hasText: label }).click();
   await page.waitForTimeout(300);
   ok(new URL(page.url()).pathname === path, `nav: ${label}`);
@@ -225,13 +282,29 @@ await page.waitForTimeout(1500);
 const inst = await cdp.send('Page.getInstallabilityErrors');
 ok(inst.installabilityErrors.length === 0, `installable (${JSON.stringify(inst.installabilityErrors)})`);
 
+// מצב שטח: מיקום מדומה בתל מגידו
+const g = await browser.newContext({ viewport: { width: 1366, height: 900 }, geolocation: { latitude: 32.5852, longitude: 35.1845 }, permissions: ['geolocation'] });
+await mockAll(g);
+const gp = await g.newPage();
+watch(gp);
+await gp.goto(ROOT);
+await gp.locator('.field-btn').click();
+await gp.waitForTimeout(800);
+ok((await gp.locator('.field-result .tone').textContent()).includes('תל מגידו'), 'field mode finds the station you stand at');
+ok((await gp.locator('.field-near li').count()) === 4, 'field mode lists the nearest stations');
+await gp.goto(`${ROOT}/route/deborah`);
+await gp.locator('.field-btn').click();
+await gp.waitForTimeout(2000);
+ok(new URL(gp.url()).searchParams.get('s') === 'megiddo', 'on the route page, field mode opens the station');
+await g.close();
+
 // נייד
 const m = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
 await mockAll(m);
 await m.route(/opentopomap/, (r) => r.abort());
 const mp = await m.newPage();
 watch(mp);
-for (const path of ['/', '/timeline', '/threads', '/people', ...ROUTES.map((r) => `/route/${r.id}`)]) {
+for (const path of ['/', '/timeline', '/threads', '/people', '/tells', ...ROUTES.map((r) => `/route/${r.id}`)]) {
   await mp.goto(ROOT + path);
   await mp.waitForTimeout(700);
   const w = await mp.evaluate(() => [document.documentElement.scrollWidth, window.innerWidth]);

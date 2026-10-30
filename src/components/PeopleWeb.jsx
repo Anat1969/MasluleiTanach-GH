@@ -5,6 +5,7 @@ import { PEOPLE, LINKS, RELATIONS, personById, linksOf } from '../data/people.js
 import { ERAS, ROLES } from '../data/eras.js';
 import { ROUTES, colorOf } from '../data/routes.js';
 import { refLabel, refUrl } from '../lib/bible.js';
+import { JOURNEYS } from '../data/journeys.js';
 import { Rich, Lines } from '../lib/rich.jsx';
 
 const ROW = 50;
@@ -48,6 +49,7 @@ export function PersonCard({ id, onPick }) {
         <section><h4 className="mono">נגד מי</h4>{cold.length ? list(cold) : <p className="muted">אין יריבים בסיפורים שכאן.</p>}</section>
       </div>
       <div className="chips">
+        {JOURNEYS[id] && <Link to={`/people?p=${id}&j=${id}#journey`} className="chip press chip-strong">המסע של {p.name} על המפה</Link>}
         {p.routes.map((rid) => {
           const r = ROUTES.find((x) => x.id === rid);
           return <Link key={rid} to={`/route/${rid}`} className="chip press" style={{ '--k': colorOf(r) }}><i className="kind-sw" />{r.title}</Link>;

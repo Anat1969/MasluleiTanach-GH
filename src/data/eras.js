@@ -4,7 +4,8 @@
 export const ROLES = {
   empire: { name: 'אימפריה שולטת', color: '#9b3b2a' },
   canaan: { name: 'ערי כנען', color: '#b07a2a' },
-  israel: { name: 'ישראל ויהודה', color: '#2b4c7e' },
+  israel: { name: 'ישראל', color: '#2b4c7e' },
+  judah: { name: 'יהודה', color: '#4a7fb5' },
   philistine: { name: 'פלשתים', color: '#2f7a72' },
   neighbor: { name: 'עמים שכנים', color: '#6b5b7b' },
 };
@@ -160,7 +161,7 @@ export const ERAS = [
       { name: 'יזרעאל', at: [32.557, 35.328], role: 'israel' },
       { name: 'מגידו', at: [32.585, 35.184], role: 'israel' },
       { name: 'דן', at: [33.249, 35.652], role: 'israel' },
-      { name: 'ירושלים, יהודה', at: [31.778, 35.235], role: 'israel' },
+      { name: 'ירושלים, יהודה', at: [31.778, 35.235], role: 'judah' },
       { name: 'צור וצידון', at: [33.27, 35.20], role: 'neighbor' },
       { name: 'ארם דמשק', at: [33.30, 36.05], role: 'neighbor' },
       { name: 'מואב (מישע)', at: [31.50, 35.78], role: 'neighbor' },

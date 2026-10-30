@@ -14,6 +14,7 @@ export default function TopBar() {
         <NavLink to="/timeline">ציר זמן</NavLink>
         <NavLink to="/people">דמויות</NavLink>
         <NavLink to="/threads">מארג קשרים</NavLink>
+        <NavLink to="/tells">תלים</NavLink>
       </nav>
       <AIMenu />
     </header>

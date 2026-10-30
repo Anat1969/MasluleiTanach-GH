@@ -154,5 +154,41 @@ def main():
         json.dump(out, f, ensure_ascii=False, separators=(',', ':'))
 
 
+
+
+def journeys():
+    """מסעות דמויות: ניתוב רגלי בין התחנות של כל מסע. פלט: src/data/journeys.json."""
+    data = json.loads(subprocess.check_output(['node', '-e',
+        "import('./src/data/journeys.js').then(m=>console.log(JSON.stringify(Object.fromEntries(Object.entries(m.JOURNEYS).map(([k,j])=>[k,j.stops.map(s=>({id:s.id,at:s.at}))])))))"],
+        cwd=ROOT))
+    out = {}
+    for pid, stops in data.items():
+        legs, marks, dist0, up, down = [], [0.0], 0.0, 0.0, 0.0
+        for a, b in zip(stops, stops[1:]):
+            pts, km, minutes = route(a['at'], b['at'], 'foot')
+            crow = hav(a['at'], b['at'])
+            if km > 2.2 * crow + 3:
+                print(f"  check journey {pid} {a['id']}->{b['id']}: foot {km:.1f} km vs crow {crow:.1f} km", file=sys.stderr)
+            samples, length = sample(pts, 0.25)
+            prev = None
+            for d, p in samples:
+                e = elev(p)
+                if prev is not None:
+                    up += max(0, e - prev); down += max(0, prev - e)
+                prev = e
+            dist0 += length
+            marks.append(round(dist0, 2))
+            legs.append({'from': a['id'], 'to': b['id'], 'km': round(km, 1), 'hours': round(minutes / 60, 1),
+                         'coords': [[round(p[0], 5), round(p[1], 5)] for p in simplify(pts, 0.0001)]})
+        out[pid] = {'legs': legs, 'marks': marks, 'totals': {'km': round(sum(l['km'] for l in legs)), 'hours': round(sum(l['hours'] for l in legs)), 'ascent': round(up), 'descent': round(down)}}
+        t = out[pid]['totals']
+        print(f"journey {pid}: {t['km']} km on foot, ~{t['hours']} h, +{t['ascent']} m, points {sum(len(l['coords']) for l in legs)}")
+    with open(os.path.join(ROOT, 'src', 'data', 'journeys.json'), 'w', encoding='utf8') as f:
+        json.dump(out, f, ensure_ascii=False, separators=(',', ':'))
+
+
 if __name__ == '__main__':
-    main()
+    if 'journeys' not in sys.argv[1:]:
+        main()
+    if 'trails' not in sys.argv[1:]:
+        journeys()
