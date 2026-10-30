@@ -13,6 +13,9 @@ import Story from '../components/Story.jsx';
 import ArtGallery from '../components/ArtGallery.jsx';
 import Profile from '../components/Profile.jsx';
 import PeopleWeb from '../components/PeopleWeb.jsx';
+import TellModel from '../components/TellModel.jsx';
+import { tellOfStation } from '../data/tells.js';
+import FieldMode from '../components/FieldMode.jsx';
 import { PEOPLE } from '../data/people.js';
 import TRAILS from '../data/trails.json';
 import { eraOf } from '../data/eras.js';
@@ -54,6 +57,12 @@ function Station({ s, i, r, visited, toggle }) {
         <h3 className="mono">בשטח</h3>
         <p>{s.field}</p>
       </div>
+      {tellOfStation(s.id) && (
+        <details className="st-tell" open>
+          <summary className="mono">חתך התל: שכבות הזמן</summary>
+          <TellModel id={tellOfStation(s.id)} compact />
+        </details>
+      )}
       <div className="layers">
         {Object.entries(LAYER_NAMES).map(([k, name]) => (
           <div key={k} className={`layer layer-${k}`}>
@@ -150,6 +159,7 @@ export default function RoutePage() {
             <div><dt className="mono">רמת קושי</dt><dd>{r.level}</dd></div>
           </dl>
           <p className="stats-note mono">המרחקים והזמנים מחושבים על רשת השבילים והדרכים של OpenStreetMap. זמני ביקור באתרים לא כלולים.</p>
+          <FieldMode routeId={r.id} onArrive={(sid) => document.getElementById(`s-${sid}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })} />
           <p className="r-season"><span className="mono">עונה מומלצת</span> {r.season}</p>
         </motion.div>
       </section>

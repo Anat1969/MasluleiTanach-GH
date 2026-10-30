@@ -10,6 +10,7 @@ import Timeline from '../components/Timeline.jsx';
 import RouteCard from '../components/RouteCard.jsx';
 import Verse from '../components/Verse.jsx';
 import Threads from '../components/Threads.jsx';
+import FieldMode from '../components/FieldMode.jsx';
 import { ART } from '../data/art.js';
 import { ERAS } from '../data/eras.js';
 import TRAILS from '../data/trails.json';
@@ -50,6 +51,7 @@ export default function Home() {
             <a href="#map" className="btn">למפת המסלולים</a>
             <Link to="/route/elah" className="btn btn-ghost">להתחיל בעמק האלה</Link>
           </div>
+          <FieldMode />
         </motion.div>
       </section>
 
@@ -112,7 +114,7 @@ export default function Home() {
           <p className="mono eyebrow">אותה דמות, אותו נחל, סיפור אחר</p>
           <h2>מארג הקשרים</h2>
         </header>
-        <Threads />
+        <Threads compact />
       </section>
 
       <footer className="footer">
