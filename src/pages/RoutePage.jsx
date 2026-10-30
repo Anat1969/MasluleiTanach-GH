@@ -12,6 +12,8 @@ import Verse from '../components/Verse.jsx';
 import Story from '../components/Story.jsx';
 import ArtGallery from '../components/ArtGallery.jsx';
 import Profile from '../components/Profile.jsx';
+import PeopleWeb from '../components/PeopleWeb.jsx';
+import { PEOPLE } from '../data/people.js';
 import TRAILS from '../data/trails.json';
 import { eraOf } from '../data/eras.js';
 import { Lines } from '../lib/rich.jsx';
@@ -78,6 +80,7 @@ export default function RoutePage() {
   const [active, setActive] = useState(sp.get('s') || r?.stations[0].id);
   const [tiles, setTiles] = useState('relief');
   const [hover, setHover] = useState(null);
+  const [person, setPerson] = useState(null);
   const { visited, toggle } = useVisited();
   const storyRef = useRef(null);
 
@@ -235,6 +238,14 @@ export default function RoutePage() {
           </nav>
         </div>
       </div>
+      <section id="people" className="route-people">
+        <header className="ag-head">
+          <p className="mono eyebrow">האנשים שמאחורי הסיפור</p>
+          <h2>מי עם מי, ומי נגד מי</h2>
+          <p className="muted">{PEOPLE.filter((p) => p.routes.includes(r.id)).length} דמויות בסיפור הזה. לחיצה על דמות פותחת את האישיות והקשרים שלה. <Link to={`/people?route=${r.id}`}>כל הדמויות</Link></p>
+        </header>
+        <PeopleWeb routeId={r.id} selected={person} onSelect={(id) => setPerson(id === person ? null : id)} compact />
+      </section>
       <ArtGallery id={r.id} />
     </main>
   );

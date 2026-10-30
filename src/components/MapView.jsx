@@ -3,6 +3,7 @@ import { MapContainer, TileLayer, Polyline, Marker, Tooltip, CircleMarker, useMa
 import L from 'leaflet';
 import { colorOf, STATION_TYPES } from '../data/routes.js';
 import TRAILS from '../data/trails.json';
+import { ZOOM_PROPS, WheelGuard } from './mapZoom.jsx';
 
 // שכבות בלי מפתח API. לכל שכבה מקור גיבוי שנכנס אוטומטית אם האריחים נכשלים.
 // (CARTO הפסיק לעבוד בלי מפתח ב-2026-10 והחזיר "API KEY REQUIRED" במקום מפה.)
@@ -132,7 +133,8 @@ export default function MapView({ routes, focusId, progress, activeStation, tile
   const walkerLeg = focus && activeIdx > 0 && progress != null ? TRAILS[focus.id].legs[activeIdx - 1] : null;
 
   return (
-    <MapContainer className="map" bounds={all} boundsOptions={{ padding: [30, 30] }} scrollWheelZoom={false} zoomControl={interactive} attributionControl>
+    <MapContainer className="map" bounds={all} boundsOptions={{ padding: [30, 30] }} {...ZOOM_PROPS} zoomControl={interactive} attributionControl>
+      <WheelGuard />
       <Tiles mode={tiles} />
       <Controller bounds={bounds} center={active ? active.at : null} k={focusId || 'all'} />
       {routes.map((r) => {

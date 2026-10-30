@@ -5,6 +5,8 @@ import { yearLabel } from '../lib/bible.js';
 import { Lines } from '../lib/rich.jsx';
 import EraMap from './EraMap.jsx';
 import Photo from './Photo.jsx';
+import { PEOPLE } from '../data/people.js';
+import { ROLES } from '../data/eras.js';
 
 /** מהדורת חדשות של התקופה: כותרת ראשית, ארבעה טורים, ממצאים כמקורות, ומפה של מי ישב איפה. */
 export default function EraNews({ era }) {
@@ -44,6 +46,16 @@ export default function EraNews({ era }) {
           ))}
         </div>
       </section>
+      {PEOPLE.some((p) => p.era === era.id) && (
+        <section className="news-routes">
+          <h3 className="mono">אנשי התקופה</h3>
+          <div className="chips">
+            {PEOPLE.filter((p) => p.era === era.id).map((p) => (
+              <Link key={p.id} to={`/people?p=${p.id}`} className="chip press" style={{ '--k': ROLES[p.side].color }}><i className="kind-sw" />{p.name}</Link>
+            ))}
+          </div>
+        </section>
+      )}
       {routes.length > 0 && (
         <section className="news-routes">
           <h3 className="mono">מסלולים מהתקופה</h3>

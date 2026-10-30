@@ -11,6 +11,7 @@ const { ROUTES, THREADS } = await import('../src/data/routes.js');
 const { ERAS } = await import('../src/data/eras.js');
 const { ART } = await import('../src/data/art.js');
 const { STORIES } = await import('../src/data/stories.js');
+const { PEOPLE, LINKS, RELATIONS } = await import('../src/data/people.js');
 const TRAILS = JSON.parse(readFileSync('src/data/trails.json', 'utf8'));
 const png = readFileSync('public/icon-512.png');
 const menu = readFileSync('tests/ai-menu.fixture.js');
@@ -119,6 +120,37 @@ await page.locator('.step').nth(1).click();
 await page.waitForTimeout(400);
 ok(await page.locator('.r-map .walker').count() === 1, 'walker moves along the trail');
 
+// גלגלת: זום לפי מיקום העכבר, גם עם Ctrl, בלי להגדיל את הדף
+await page.goto(`${ROOT}/route/saul`);
+await page.waitForTimeout(1500);
+const spread = () => page.locator('.r-map .leaflet-marker-icon').evaluateAll((els) => {
+  const r = els.map((e) => e.getBoundingClientRect());
+  return Math.hypot(r[0].x - r[r.length - 1].x, r[0].y - r[r.length - 1].y);
+});
+await page.locator('.station').first().scrollIntoViewIfNeeded();
+await page.waitForTimeout(1500);
+const mapBox = await page.locator('.r-map .map').boundingBox();
+// מאזין אחרון על המפה עצמה: Leaflet עוצר את ההפצה, ולכן document לא שומע את האירוע.
+await page.evaluate(() => { window.__prevented = null; document.querySelector('.r-map .map').addEventListener('wheel', (e) => { window.__prevented = e.defaultPrevented; }); });
+const d0 = await spread();
+await page.mouse.move(mapBox.x + mapBox.width / 2, mapBox.y + mapBox.height / 2);
+await page.keyboard.down('Control');
+await page.mouse.wheel(0, -300);
+await page.keyboard.up('Control');
+await page.waitForTimeout(900);
+const d1 = await spread();
+ok(d1 > d0 * 1.2, `ctrl+wheel zooms the map in (${Math.round(d0)} to ${Math.round(d1)} px)`);
+ok(await page.evaluate(() => window.__prevented) === true, 'ctrl+wheel does not zoom the whole page');
+await page.mouse.wheel(0, 400);
+await page.waitForTimeout(900);
+ok((await spread()) < d1 * 0.9, 'plain wheel zooms the map out');
+
+// דמויות במסלול
+ok((await page.locator('#people .web-node').count()) === PEOPLE.filter((p) => p.routes.includes('saul')).length, 'route page shows its characters');
+await page.locator('#people .web-node', { hasText: 'יונתן' }).click();
+await page.waitForTimeout(400);
+ok((await page.locator('#people .person h3').textContent()).includes('יונתן'), 'character card opens on the route page');
+
 // "הייתי כאן" נשמר
 await page.goto(`${ROOT}/route/elah`);
 await page.locator('.check').first().click();
@@ -140,6 +172,22 @@ for (const [t, th] of Object.entries(THREADS)) {
   await page.locator('.th-thread', { hasText: th.name }).click();
 }
 await page.screenshot({ path: `${SHOTS}/threads-desktop.png` });
+// דף הדמויות
+await page.goto(`${ROOT}/people`);
+ok((await page.locator('.web-node').count()) === PEOPLE.length, `people web: ${PEOPLE.length} characters`);
+ok((await page.locator('.web-svg path').count()) === LINKS.length, `people web: ${LINKS.length} relations`);
+for (const p of PEOPLE) {
+  await page.locator('.web-node').filter({ has: page.getByText(p.name, { exact: true }) }).click();
+  await page.waitForTimeout(450);
+  const h = await page.locator('.person h3').textContent();
+  ok(h.includes(p.name) && new URL(page.url()).searchParams.get('p') === p.id, `person ${p.id}: card and URL`);
+}
+await page.locator('.web-legend .chip', { hasText: RELATIONS.enemy.name }).click();
+ok((await page.locator('.web-svg path').count()) === LINKS.filter((l) => l.type !== 'enemy').length, 'relation filter hides a type');
+await page.locator('.route-filter .chip', { hasText: 'מלחמת דבורה' }).click();
+ok((await page.locator('.web-node').count()) === PEOPLE.filter((p) => p.routes.includes('deborah')).length, 'route filter on people page');
+await page.screenshot({ path: `${SHOTS}/people-desktop.png` });
+
 // ציר זמן: מהדורת חדשות לכל תקופה
 await page.goto(`${ROOT}/timeline`);
 for (const e of ERAS) {
@@ -148,6 +196,7 @@ for (const e of ERAS) {
   ok((await page.locator('.news-headline').textContent()) === e.headline, `era ${e.id}: news headline`);
   ok((await page.locator('.era-map .people, .era-map .people-dot').count()) === e.peoples.length, `era ${e.id}: ${e.peoples.length} peoples on the map`);
   ok(new URL(page.url()).searchParams.get('era') === e.id, `era ${e.id}: state in URL`);
+  ok((await page.locator('.news-routes .chip').count()) >= PEOPLE.filter((p) => p.era === e.id).length, `era ${e.id}: people of the era`);
 }
 await page.locator('.tl-band').first().click();
 ok(new URL(page.url()).searchParams.get('era') === ERAS[0].id, 'timeline band opens its era');
@@ -159,7 +208,7 @@ await page.waitForURL(/\/route\//);
 ok(true, 'second click on a timeline dot opens the route');
 // ניווט עליון
 await page.goto(ROOT);
-for (const [label, path] of [['ציר זמן', '/timeline'], ['מארג קשרים', '/threads'], ['מסלולים', '/']]) {
+for (const [label, path] of [['ציר זמן', '/timeline'], ['דמויות', '/people'], ['מארג קשרים', '/threads'], ['מסלולים', '/']]) {
   await page.locator('.nav a', { hasText: label }).click();
   await page.waitForTimeout(300);
   ok(new URL(page.url()).pathname === path, `nav: ${label}`);
@@ -182,7 +231,7 @@ await mockAll(m);
 await m.route(/opentopomap/, (r) => r.abort());
 const mp = await m.newPage();
 watch(mp);
-for (const path of ['/', '/timeline', '/threads', ...ROUTES.map((r) => `/route/${r.id}`)]) {
+for (const path of ['/', '/timeline', '/threads', '/people', ...ROUTES.map((r) => `/route/${r.id}`)]) {
   await mp.goto(ROOT + path);
   await mp.waitForTimeout(700);
   const w = await mp.evaluate(() => [document.documentElement.scrollWidth, window.innerWidth]);
