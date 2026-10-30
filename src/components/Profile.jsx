@@ -92,7 +92,7 @@ export default function Profile({ route, activeIdx, onHover, onStation }) {
               </g>
             );
           })}
-          {legs.map((l, i) => (
+          {legs.map((l, i) => Math.abs(x(t.marks[i]) - x(t.marks[i + 1])) > 64 && (
             <text key={l.from} x={x(l.mid)} y={H - 8} className="pf-leg" textAnchor="middle">
               {l.mode === 'walk' ? 'הליכה' : 'נסיעה'} {l.km.toFixed(1)}
             </text>
