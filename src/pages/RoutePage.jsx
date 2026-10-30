@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link, useParams, useSearchParams } from 'react-router-dom';
+import { Link, useLocation, useParams, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ROUTES, THREADS, LAYER_NAMES, STATION_TYPES, colorOf, periodOf, routeById } from '../data/routes.js';
 import { refLabel, refUrl, yearLabel } from '../lib/bible.js';
@@ -9,6 +9,12 @@ import MapView from '../components/MapView.jsx';
 import Legend from '../components/Legend.jsx';
 import Photo from '../components/Photo.jsx';
 import Verse from '../components/Verse.jsx';
+import Story from '../components/Story.jsx';
+import ArtGallery from '../components/ArtGallery.jsx';
+import Profile from '../components/Profile.jsx';
+import TRAILS from '../data/trails.json';
+import { eraOf } from '../data/eras.js';
+import { Lines } from '../lib/rich.jsx';
 
 const sorted = [...ROUTES].sort((a, b) => a.year - b.year);
 const navUrl = (at) => `https://www.google.com/maps/dir/?api=1&destination=${at[0]},${at[1]}`;
@@ -68,8 +74,10 @@ export default function RoutePage() {
   const { id } = useParams();
   const r = routeById(id);
   const [sp, setSp] = useSearchParams();
+  const loc = useLocation();
   const [active, setActive] = useState(sp.get('s') || r?.stations[0].id);
   const [tiles, setTiles] = useState('relief');
+  const [hover, setHover] = useState(null);
   const { visited, toggle } = useVisited();
   const storyRef = useRef(null);
 
@@ -78,6 +86,7 @@ export default function RoutePage() {
     const s = sp.get('s');
     setActive(s || r?.stations[0].id);
     if (s) setTimeout(() => document.getElementById(`s-${s}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 400);
+    else if (loc.hash === '#art') setTimeout(() => document.getElementById('art')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 500);
     else window.scrollTo(0, 0);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
@@ -116,6 +125,9 @@ export default function RoutePage() {
   const prev = sorted[pos - 1];
   const next = sorted[pos + 1];
   const go = (sid) => document.getElementById(`s-${sid}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  const tr = TRAILS[r.id].totals;
+  const era = eraOf(r.year);
+  const hm = (m) => (m >= 60 ? `${Math.floor(m / 60)}:${String(m % 60).padStart(2, '0')}` : `0:${String(m).padStart(2, '0')}`);
 
   return (
     <main className="route" style={{ '--c': color }}>
@@ -126,16 +138,32 @@ export default function RoutePage() {
           <p className="r-place">{r.place} <span className="mono">{r.placeEn}</span></p>
           <Verse v={r.key} big />
           <p className="r-lead">{r.lead}</p>
-          <div className="facts facts-big mono">
-            <span><b>{r.stations.length}</b> תחנות</span>
-            <span><b>{r.km}</b> ק״מ</span>
-            <span><b>{r.hours}</b> שעות</span>
-            <span><b>{r.level}</b> רמת קושי</span>
-            <span><b>{r.mode}</b> אופן</span>
-          </div>
+          <dl className="stats">
+            <div><dt className="mono">תחנות</dt><dd>{r.stations.length}</dd></div>
+            {tr.walkKm > 0 && <div><dt className="mono">הליכה בשבילים</dt><dd>{tr.walkKm} <small>ק״מ · {hm(tr.walkMin)} ש׳</small></dd></div>}
+            {tr.driveKm > 0 && <div><dt className="mono">נסיעה בין אתרים</dt><dd>{tr.driveKm} <small>ק״מ · {hm(tr.driveMin)} ש׳</small></dd></div>}
+            {tr.ascent > 0 && <div><dt className="mono">עלייה מצטברת ברגל</dt><dd>{tr.ascent} <small>מ׳</small></dd></div>}
+            <div><dt className="mono">גובה</dt><dd dir="ltr">{tr.min}…{tr.max} <small>מ׳</small></dd></div>
+            <div><dt className="mono">רמת קושי</dt><dd>{r.level}</dd></div>
+          </dl>
+          <p className="stats-note mono">המרחקים והזמנים מחושבים על רשת השבילים והדרכים של OpenStreetMap. זמני ביקור באתרים לא כלולים.</p>
           <p className="r-season"><span className="mono">עונה מומלצת</span> {r.season}</p>
         </motion.div>
       </section>
+
+      <div className="r-intro">
+        <Story id={r.id} />
+        <aside className="era-box" style={{ '--c': era.color }}>
+          <span className="mono">בזמן הזה בארץ · {era.name} · {era.arch}</span>
+          <h3>{era.headline}</h3>
+          <Lines lines={era.columns[0].lines.slice(0, 2).concat(era.columns[1].lines.slice(0, 1))} />
+          <Link className="btn-quiet press" to={`/timeline?era=${era.id}`}>כל החדשות של התקופה</Link>
+        </aside>
+      </div>
+
+      <div className="profile-mobile">
+        <Profile route={r} activeIdx={idx} onStation={go} />
+      </div>
 
       <div className="r-grid">
         <div className="r-map">
@@ -153,8 +181,11 @@ export default function RoutePage() {
             ))}
           </div>
           <div className="r-map-box">
-            <MapView routes={[r]} focusId={r.id} progress={idx} activeStation={active} tiles={tiles} visited={visited} onStation={(_, sid) => go(sid)} />
+            <MapView routes={[r]} focusId={r.id} progress={idx} activeStation={active} tiles={tiles} visited={visited} hover={hover} onStation={(_, sid) => go(sid)} />
             <Legend tiles={tiles} setTiles={setTiles} showPeriods={false} color={color} progress />
+          </div>
+          <div className="profile-desk">
+            <Profile route={r} activeIdx={idx} onHover={setHover} onStation={go} />
           </div>
           <div className="r-progress mono">ביקרתם ב־{done} מתוך {r.stations.length} תחנות</div>
         </div>
@@ -178,12 +209,6 @@ export default function RoutePage() {
                 </motion.li>
               ))}
             </ol>
-          </section>
-
-          <section className="art">
-            <h3 className="mono">ביצירות אמנות</h3>
-            <Photo wiki={r.art.wiki} name={r.art.title} en={r.art.wiki[0].split(':')[1]} color={color} tall />
-            <p>{r.art.title}</p>
           </section>
 
           <section className="related">
@@ -210,6 +235,7 @@ export default function RoutePage() {
           </nav>
         </div>
       </div>
+      <ArtGallery id={r.id} />
     </main>
   );
 }

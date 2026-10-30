@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { wikiImage, commonsSearch } from '../lib/wiki.js';
 
 /** תמונה אמיתית מוויקיפדיה. כשאין, איור קווי גובה עם שם המקום, ולא מסגרת ריקה. */
-export default function Photo({ wiki, name, en, color, tall }) {
+export default function Photo({ wiki, name, en, color, tall, contain }) {
   const [img, setImg] = useState(undefined);
   useEffect(() => {
     let live = true;
@@ -13,7 +13,7 @@ export default function Photo({ wiki, name, en, color, tall }) {
   }, [wiki.join('|')]);
 
   return (
-    <figure className={`photo ${tall ? 'photo-tall' : ''}`} style={{ '--c': color }}>
+    <figure className={`photo ${tall ? 'photo-tall' : ''} ${contain ? 'photo-contain' : ''}`} style={{ '--c': color }}>
       {img ? (
         <motion.img src={img.src} alt={name} loading="lazy" initial={{ opacity: 0, scale: 1.06 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.8 }} />
       ) : (

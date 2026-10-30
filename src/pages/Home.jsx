@@ -10,6 +10,12 @@ import Timeline from '../components/Timeline.jsx';
 import RouteCard from '../components/RouteCard.jsx';
 import Verse from '../components/Verse.jsx';
 import Threads from '../components/Threads.jsx';
+import { ART } from '../data/art.js';
+import { ERAS } from '../data/eras.js';
+import TRAILS from '../data/trails.json';
+
+const WORKS = Object.values(ART).reduce((n, a) => n + a.length, 0);
+const WALK = Object.values(TRAILS).reduce((n, t) => n + t.totals.walkKm, 0);
 
 const sorted = [...ROUTES].sort((a, b) => a.year - b.year);
 const STATIONS = ROUTES.reduce((n, r) => n + r.stations.length, 0);
@@ -37,7 +43,7 @@ export default function Home() {
           ))}
         </svg>
         <motion.div className="hero-text" initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }}>
-          <p className="mono eyebrow">{ROUTES.length} מסלולים · {STATIONS} תחנות · 5 תקופות</p>
+          <p className="mono eyebrow">{ROUTES.length} מסלולים · {STATIONS} תחנות · {Math.round(WALK)} ק״מ בשבילים · {WORKS} יצירות · {ERAS.length} תקופות</p>
           <h1>לעמוד במקום, לקרוא את הפסוק,<br />לראות את הנוף.</h1>
           <p className="hero-sub">מסלולי טיול בעקבות סיפורי התנ״ך. בכל תחנה: מה קרה כאן, מה רואים מכאן, ומה עושים בשטח.</p>
           <div className="hero-actions">
@@ -46,6 +52,13 @@ export default function Home() {
           </div>
         </motion.div>
       </section>
+
+      <nav className="content-map" aria-label="מה יש כאן">
+        <a href="#map" className="cm-card press"><span className="mono">מקום</span><strong>מסלולים על השביל האמיתי</strong><small>תוואי מחושב, פרופיל גובה ותחנות</small></a>
+        <Link to="/route/elah" className="cm-card press"><span className="mono">סיפור</span><strong>סיפור רקע לכל מסלול</strong><small>מה קרה לפני, ולמה דווקא כאן</small></Link>
+        <Link to="/timeline" className="cm-card press"><span className="mono">זמן</span><strong>מה קרה אז בארץ</strong><small>מהדורת חדשות לכל תקופה, ומי ישב איפה</small></Link>
+        <Link to="/route/saul#art" className="cm-card press"><span className="mono">אמנות</span><strong>{WORKS} יצירות שהסיפורים הולידו</strong><small>ציור, פיסול, שירה ומוזיקה</small></Link>
+      </nav>
 
       <section id="map" className="atlas">
         <div className="atlas-map">
@@ -80,7 +93,7 @@ export default function Home() {
           )}
         </aside>
         <div className="atlas-time">
-          <Timeline focusId={focusId} onFocus={setFocusId} onOpen={open} />
+          <Timeline focusId={focusId} onFocus={setFocusId} onOpen={open} onEra={(id) => nav(`/timeline?era=${id}`)} />
         </div>
       </section>
 

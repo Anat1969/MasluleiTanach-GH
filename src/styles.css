@@ -11,7 +11,7 @@
   --shadow: 0 1px 2px rgba(20, 22, 26, 0.06), 0 8px 24px rgba(20, 22, 26, 0.08);
   --shadow-lg: 0 2px 4px rgba(20, 22, 26, 0.06), 0 24px 60px rgba(20, 22, 26, 0.14);
   --sans: 'IBM Plex Sans Hebrew', system-ui, sans-serif;
-  --mono: 'IBM Plex Mono', ui-monospace, monospace;
+  --mono: 'IBM Plex Mono', 'IBM Plex Sans Hebrew', ui-monospace, monospace;
   --serif: 'Frank Ruhl Libre', 'IBM Plex Sans Hebrew', serif;
   --bar: 60px;
   --c: #3c4043;
@@ -370,3 +370,198 @@ ai-menu { flex: 0 0 auto; }
 .legend:not([open]) .legend-title::after { content: ' · הצגה'; }
 /* מפת OSM בגווני אפור, כדי שצבעי המסלולים יובילו */
 .tiles-grey { filter: grayscale(1) contrast(0.92) brightness(1.06); }
+
+/* ===== שדרוג 2026-10-30: שפת העיצוב הקבועה ===== */
+/* כפתורים, צ'יפים, שדות וכרטיסים מרובעים. כל מה שלוחצים עליו לחיץ. */
+.btn, .btn-quiet, .chip, .check, .step, .seg, .seg button, .nav a, .card, .focus, .timeline, .station,
+.question, .pager a, .related-list a, .th-thread, .th-detail, .threads-graph, .story-row, .legend,
+.atlas-map, .r-map-box, .photo-tall, .st-see, .layer, .verse, .route-index button, .tl-dot span,
+.facts span, .progress, .era-tab, .tl-band { border-radius: 0; }
+.press, .btn, .btn-quiet, .chip, .check, .step, .card, .era-tab, .pager a, .related-list a, .th-thread, .nav a {
+  box-shadow: 0 1px 0 rgba(20, 22, 26, 0.08), 0 2px 6px rgba(20, 22, 26, 0.08);
+  transition: transform 0.18s, box-shadow 0.18s, background 0.18s, color 0.18s;
+}
+.press:hover, .btn:hover, .btn-quiet:hover, .chip:hover, .check:hover, .step:hover, .era-tab:hover, .pager a:hover, .related-list a:hover, .th-thread:hover, .nav a:hover {
+  transform: translateY(-2px); box-shadow: 0 2px 0 rgba(20, 22, 26, 0.06), 0 10px 22px rgba(20, 22, 26, 0.14);
+}
+.press:active, .btn:active, .btn-quiet:active, .chip:active, .check:active, .step:active, .era-tab:active, .pager a:active, .th-thread:active, .nav a:active {
+  transform: translateY(1px); box-shadow: 0 0 0 rgba(0, 0, 0, 0), inset 0 2px 4px rgba(20, 22, 26, 0.16);
+}
+.btn-quiet { background: var(--paper); }
+:focus-visible { outline: 2px solid #2b4c7e; outline-offset: 2px; }
+.num { font-family: var(--mono); font-weight: 500; unicode-bidi: isolate; direction: ltr; }
+.lines p { margin: 0 0 6px; }
+.section-gap { margin-top: 56px; }
+
+/* צבעי משמעות */
+.tone { padding: 14px 18px; border-inline-start: 4px solid; background: var(--paper); box-shadow: var(--shadow); }
+.tone .mono { display: block; color: var(--ink-3); margin-bottom: 4px; }
+.tone p { margin: 0; }
+.tone-insight { border-color: #e2b93b; background: #fffbea; }
+.tone-neutral { border-color: #5f6b78; }
+.tone-problem { border-color: #b3261e; background: #fdf1f0; }
+.tone-solution { border-color: #2e7d32; background: #eff7ef; }
+
+/* נתוני מסלול */
+.stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); margin: 18px 0 6px; max-width: 900px; }
+.stats div { background: var(--paper); padding: 10px 14px; }
+.stats dt { color: var(--ink-3); font-size: 0.7rem; }
+.stats dd { margin: 2px 0 0; font: 500 1.35rem/1.2 var(--mono); }
+.stats dd small { font: 400 0.75rem var(--sans); color: var(--ink-3); }
+.stats-note { color: var(--ink-3); font-size: 0.68rem; margin: 0; }
+
+/* פתיחת דף מסלול: סיפור רקע וההקשר התקופתי */
+.r-intro { display: grid; grid-template-columns: minmax(0, 2.2fr) minmax(0, 1fr); gap: 28px; padding: 8px clamp(16px, 4vw, 48px) 40px; align-items: start; }
+.story { background: var(--paper); box-shadow: var(--shadow-lg); padding: clamp(22px, 4vw, 44px); border-top: 6px solid var(--c); }
+.story-head h2 { font-size: clamp(2.2rem, 5vw, 3.8rem); font-weight: 300; margin: 4px 0 6px; }
+.story-dek { font-size: 1.15rem; color: var(--ink-2); margin: 0 0 18px; }
+.story-lead { font-size: 1.3rem; font-weight: 300; margin: 0 0 22px; }
+.story-lead::first-letter { float: right; font: 400 4.2rem/0.8 var(--serif); color: var(--c); margin: 6px 0 0 10px; }
+.story-cols { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 26px; border-top: 1px solid var(--line); padding-top: 18px; }
+.story-sec h3 { font-weight: 600; font-size: 1.05rem; margin-bottom: 8px; display: flex; gap: 8px; align-items: baseline; }
+.story-sec h3 .mono { color: var(--c); }
+.story-sec .lines p { font-size: 0.98rem; max-width: 62ch; }
+.pull { margin: 16px 0 0; padding: 12px 0; border-top: 2px solid var(--c); border-bottom: 2px solid var(--c); }
+.pull p { margin: 0 0 4px; font: 400 1.35rem/1.45 var(--serif); }
+.pull a { color: var(--c); text-decoration: none; }
+.story-foot { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-top: 24px; }
+.haiku { padding: 14px 18px; background: #1f2328; color: #f4f3f0; }
+.haiku .mono { color: var(--gold); display: block; margin-bottom: 6px; }
+.haiku p { margin: 0; font: 300 1.15rem/1.55 var(--serif); }
+.haiku small { display: block; margin-top: 8px; color: #b8bcc2; font-size: 0.8rem; }
+.era-box { position: sticky; top: calc(var(--bar) + 16px); background: var(--paper); box-shadow: var(--shadow); padding: 20px; border-top: 6px solid var(--c); }
+.era-box > .mono { color: var(--c); }
+.era-box h3 { font-weight: 400; font-size: 1.5rem; margin: 6px 0 10px; }
+.era-box .lines p { font-size: 0.92rem; }
+.era-box .btn-quiet { display: inline-block; margin-top: 8px; }
+
+/* פרופיל גובה */
+.profile { margin: 0; background: var(--paper); box-shadow: var(--shadow); padding: 10px 12px 8px; }
+.profile figcaption { display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; font-size: 0.9rem; }
+.profile figcaption .mono { color: var(--ink-3); }
+.profile-box { position: relative; min-width: 0; overflow: hidden; }
+.profile svg { display: block; direction: ltr; cursor: crosshair; font-family: var(--sans); }
+.pf-grid { stroke: var(--line-2); }
+.pf-tick { fill: var(--ink-3); font: 10px var(--mono); }
+.pf-sea { stroke: #3a7ca5; stroke-dasharray: 4 4; }
+.pf-sea-label { fill: #3a7ca5; font-size: 10px; }
+.pf-walk .pf-line { fill: none; stroke-width: 2.4; }
+.pf-drive path:first-child { fill: #e7e5e0; }
+.pf-drive .pf-line { fill: none; stroke: #9aa0a6; stroke-width: 1.4; stroke-dasharray: 2 4; }
+.pf-leg { fill: var(--ink-3); font-size: 10px; }
+.pf-st line { stroke: var(--ink-3); stroke-dasharray: 2 3; }
+.pf-st circle:first-of-type { fill: var(--paper); stroke: var(--c); stroke-width: 2; cursor: pointer; }
+.pf-st text { fill: var(--c); font: 600 10px var(--mono); pointer-events: none; }
+.pf-st .pf-dot { fill: var(--c); stroke: #fff; stroke-width: 1.5; }
+.pf-st.on circle:first-of-type { fill: var(--c); }
+.pf-st.on text { fill: #fff; }
+.pf-cur line { stroke: var(--ink); }
+.pf-cur circle { fill: var(--gold); stroke: var(--ink); stroke-width: 2; }
+.pf-tip { position: absolute; top: 4px; background: var(--ink); color: #fff; padding: 2px 8px; font-size: 0.72rem; pointer-events: none; white-space: nowrap; }
+.pf-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 0.72rem; color: var(--ink-2); margin-top: 4px; align-items: center; }
+.pf-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.pf-legend .mono { color: var(--ink-3); margin-inline-start: auto; font-size: 0.64rem; }
+.sw-area { width: 18px; height: 10px; background: linear-gradient(var(--c), color-mix(in srgb, var(--c) 15%, white)); }
+.sw-area-drive { background: #e7e5e0; outline: 1px dashed #9aa0a6; }
+.sw-sea { width: 18px; border-top: 2px dashed #3a7ca5; }
+.profile-mobile { display: none; padding: 0 clamp(16px, 4vw, 48px) 16px; }
+.r-map { gap: 8px; }
+.r-map .profile-desk { flex: 0 0 auto; }
+.walker { filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4)); }
+
+/* גלריית אמנות */
+.art-gallery { padding: 20px clamp(16px, 4vw, 48px) 70px; }
+.ag-head { max-width: 760px; margin-bottom: 20px; }
+.filters { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.chip { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--line); background: var(--paper); padding: 6px 14px; font-size: 0.88rem; text-decoration: none; }
+.chip.on { background: var(--ink); color: #fff; border-color: var(--ink); }
+.kind-sw { width: 10px; height: 10px; background: var(--k, var(--ink-3)); display: inline-block; }
+.ag-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); gap: 22px; }
+.work { background: var(--paper); box-shadow: var(--shadow); border-top: 4px solid var(--k); display: flex; flex-direction: column; }
+.work-body { padding: 16px 18px 18px; }
+.work-kind { color: var(--k); }
+.work h3 { font-weight: 400; font-size: 1.35rem; margin: 4px 0 2px; }
+.work-artist { margin: 0 0 8px; color: var(--ink-2); font-weight: 600; font-size: 0.92rem; }
+.work-note { margin: 0 0 10px; font-size: 0.94rem; }
+.work-where { color: var(--ink-3); margin: 8px 0 0; font-size: 0.7rem; }
+.photo-contain { background: #e9e7e2; aspect-ratio: 4 / 3; }
+.photo-contain img { object-fit: contain; }
+
+/* ציר הזמן: רצועות התקופות */
+.tl-band { border: 0; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0; height: 40px; top: 108px; padding: 2px 4px; }
+.tl-band.on { background: color-mix(in srgb, var(--c) 32%, white); box-shadow: inset 0 -3px 0 var(--c); }
+.tl-band-name { font-weight: 600; font-size: 0.74rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.tl-band-years { font-size: 0.62rem; color: var(--ink-2); }
+.tl-track { height: 200px; }
+.tl-range { top: 150px; }
+.tl-ticks { top: 180px; }
+
+/* מהדורת החדשות של התקופה */
+.era-tabs { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; margin: 22px 0 16px; }
+.era-tab { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 10px 14px; border: 1px solid var(--line); border-top: 4px solid var(--c); background: var(--paper); text-align: right; }
+.era-tab.on { background: var(--c); color: #fff; }
+.era-tab.on .mono { color: #fff; }
+.news { background: #fbfaf7; box-shadow: var(--shadow-lg); padding: clamp(18px, 3vw, 36px); border-top: 8px double var(--ink); }
+.news-mast { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; border-bottom: 1px solid var(--ink); padding-bottom: 8px; color: var(--ink-2); }
+.news-date { color: var(--c); font-weight: 600; }
+.news-headline { font: 400 clamp(2.2rem, 5.5vw, 4.2rem)/1.05 var(--serif); margin: 16px 0 6px; }
+.news-dek { font-size: 1.15rem; color: var(--ink-2); margin: 0 0 18px; max-width: 70ch; }
+.news-body { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 24px; }
+.news-cols { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 24px; align-content: start; }
+.news-col { border-top: 2px solid var(--c); padding-top: 8px; }
+.news-col h3 { color: var(--c); font-weight: 600; margin-bottom: 6px; }
+.news-col .lines p { font-size: 0.93rem; }
+.era-map { position: relative; height: 420px; box-shadow: var(--shadow); }
+.legend-static { position: absolute; bottom: 10px; right: 10px; }
+.legend-list li.off { opacity: 0.35; }
+.sw-dot { width: 10px; height: 10px; flex: 0 0 auto; }
+.people { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; font: 600 12px var(--sans); color: #1f2328; background: rgba(255, 255, 255, 0.9); padding: 1px 6px 1px 4px; border-inline-start: 4px solid var(--r); box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18); transform: translateX(-50%); }
+.people i { width: 8px; height: 8px; background: var(--r); }
+.people-empire { color: #fff; background: var(--r); }
+.people-empire i { background: #fff; }
+.news-finds { margin-top: 26px; }
+.news-finds h3, .news-routes h3 { color: var(--ink-3); font-weight: 500; margin-bottom: 10px; }
+.finds { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.find { margin: 0; background: var(--paper); box-shadow: var(--shadow); }
+.find figcaption { padding: 10px 12px; display: flex; flex-direction: column; gap: 2px; font-size: 0.88rem; }
+.find figcaption .mono { color: var(--c); }
+.news-routes { margin-top: 20px; }
+.series { margin-top: 20px; max-width: 760px; }
+
+@media (max-width: 900px) {
+  .r-intro { grid-template-columns: minmax(0, 1fr); }
+  .era-box { position: static; }
+  .story-cols, .story-foot { grid-template-columns: minmax(0, 1fr); }
+  .profile-mobile { display: block; }
+  .r-map .profile-desk { display: none; }
+  .news-body, .news-cols, .finds { grid-template-columns: minmax(0, 1fr); }
+  .era-tabs { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px; }
+  .era-tab { padding: 6px; }
+  .era-tab strong { font-size: 0.72rem; }
+  .era-tab .mono { font-size: 0.6rem; }
+  .era-map { height: 360px; }
+  .tl-band-name { font-size: 0.6rem; }
+}
+@media (max-width: 560px) {
+  .tl-band-name { display: none; }
+  .tl-band-years { font-size: 0.55rem; }
+  .era-tab strong { display: none; }
+}
+@media print {
+  .topbar, .btn, .btn-quiet, .chip, .filters, .r-map, .steps, .st-actions, ai-menu { display: none !important; }
+  body { background: #fff; }
+}
+.people-dot { display: block; width: 10px; height: 10px; background: var(--r); border: 2px solid #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3); transform: translate(-5px, 3px); }
+.content-map { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; padding: 0 clamp(16px, 4vw, 48px) 22px; }
+.cm-card { display: flex; flex-direction: column; gap: 2px; background: var(--paper); padding: 14px 16px; text-decoration: none; border-top: 3px solid var(--ink); }
+.cm-card .mono { color: var(--ink-3); }
+.cm-card strong { font-weight: 600; font-size: 1.02rem; }
+.cm-card small { color: var(--ink-2); }
+@media (max-width: 900px) {
+  .content-map { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .era-map { height: auto; }
+  .era-map .map { height: 340px; }
+  .era-map .legend-static { position: static; max-width: none; box-shadow: none; }
+  .era-map .legend-static .legend-list { grid-template-columns: 1fr 1fr; display: grid; }
+  .people { font-size: 10px; }
+}

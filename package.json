@@ -7,7 +7,9 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview --port 4173",
-    "test": "node tests/e2e.mjs"
+    "test": "node tests/e2e.mjs",
+    "build:github": "vite build --base=./ --outDir app --emptyOutDir",
+    "trails": "python3 scripts/build_trails.py"
   },
   "dependencies": {
     "framer-motion": "11.11.17",
